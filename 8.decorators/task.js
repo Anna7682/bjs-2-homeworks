@@ -1,48 +1,51 @@
 function cachingDecoratorNew(func) {
   let cache = [];
   function wrapper(...rest) {
-    let hash = rest.join(',');
-    let existResult = cache.filter(cacheRecord => cacheRecord.hash === hash);
-    if (existResult.length === 1) {
-        console.log('Из кэша: ' + existResult[0].value);
-        return 'Из кэша: ' + existResult[0].value;
+    const hash = rest.join(',');
+    let idx = cache.findIndex((item) => item.hash === hash);
+    if (idx !== -1) {
+        console.log('Из кэша: ' + cache[idx].value);
+        return 'Из кэша: ' + cache[idx].value;
     } 
-    else {
-      let value = func.call(this, ...rest);
-      console.log('Вычисляем: ' + value);
-      if (cache.length < 5) {   
-        cache.push({hash, value});
-      } 
-      else {
-        cache.unshift({hash, value});
-        cache.pop();
-      } 
-      return 'Вычисляем: ' + value;
-    }
-  }
-  return wrapper;
-}
-
-function debounceDecoratorNew(func, ms) {
-  let timeout;
-  func(...rest);
-  let flag = true;
-  return function (...rest) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      if (!flag) {
-        func.call(this, ...rest); 
-        flag = true;
+      let result = func(...rest);
+      cache.push({
+        'hash': hash,
+        'value': result
+      });
+      if (cache.length > 5) { 
+        cache.shift(); 
       }
-    }, ms);
-  };   
-}
-
-function debounceDecorator2(debounceDecoratorNew) {
-  let count = 0;
-  function wrapper(...rest) {
-    wrapper.history = count++;
-    return debounceDecoratorNew.call(this, ...rest);
+      console.log("Вычисляем: " + result);
+      return "Вычисляем: " + result;  
   }
   return wrapper;
-}
+  }
+
+  function debounceDecoratorNew(func) {
+    let timer = null;
+  
+    function wrapper(...args) {
+      if (timer === null) {
+        func(...args);
+        clearTimeout(timer);
+        timer = setTimeout(() => func(...args));
+      }
+    }
+    return wrapper;
+  }
+  
+  
+  function debounceDecorator2(func) {
+    let timer = null;
+  
+    function wrapper(...args) {
+      if (timer === null) {
+        func(...args);
+        clearTimeout(timer);
+        timer = setTimeout(() => func(...args), ms);
+      }
+      wrapper.count++;
+    }
+    wrapper.count = 0;
+    return wrapper;
+  }

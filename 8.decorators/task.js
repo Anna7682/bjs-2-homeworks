@@ -21,31 +21,37 @@ function cachingDecoratorNew(func) {
   return wrapper;
   }
 
-  function debounceDecoratorNew(func) {
-    let timer = null;
-  
-    function wrapper(...args) {
-      if (timer === null) {
-        func(...args);
-        clearTimeout(timer);
-        timer = setTimeout(() => func(...args));
+  function debounceDecoratorNew(func, ms) {
+    let timeout;
+    let immediate = true;
+    return function (...args) {
+      clearTimeout(timeout);
+      if (immediate) {
+        func.apply(this, args);
       }
-    }
-    return wrapper;
+      immediate = false;
+      timeout = setTimeout(() => {
+        func.apply(this, args);
+      }, ms);
+    };
   }
   
-  
+
   function debounceDecorator2(func) {
-    let timer = null;
-  
-    function wrapper(...args) {
-      if (timer === null) {
-        func(...args);
-        clearTimeout(timer);
-        timer = setTimeout(() => func(...args), ms);
+    let timeout;
+    let immediate = true;
+    function wrapper (...args) {  
+      if (immediate !== true) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+        func.call(this, ...args); 
+        }, ms);
+        this.count += 1;
+      } else if (immediate = true) {
+        timeout = func.call(this, ...args);
+        immediate = false;
+        this.count = 1;
       }
-      wrapper.count++;
     }
-    wrapper.count = 0;
     return wrapper;
   }

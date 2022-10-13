@@ -37,21 +37,22 @@ function cachingDecoratorNew(func) {
   }
   
 
+  
   function debounceDecorator2(func) {
     let timeout;
     let immediate = true;
+    wrapper.count = 0;
     function wrapper (...args) {  
-      if (immediate !== true) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-        func.call(this, ...args); 
-        }, ms);
-        this.count += 1;
-      } else if (immediate = true) {
-        timeout = func.call(this, ...args);
-        immediate = false;
-        this.count = 1;
-      }
+      wrapper.count++;
+    if (immediate) {
+      func.apply(this, ...args);
+      immediate = false;
     }
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      func.apply(this, ...args);
+      immediate = true;
+    }, ms)
+  }
     return wrapper;
   }
